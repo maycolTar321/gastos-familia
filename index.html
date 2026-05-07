@@ -3,85 +3,100 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FamFinance OS Pro - Edición Total</title>
+    <title>FamFinance OS Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
-        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { 
-            background: rgba(255, 255, 255, 0.05); 
-            backdrop-filter: blur(12px); 
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1); 
-        }
-        .modal-hidden { display: none !important; }
-        .nav-item:active { transform: scale(0.9); transition: 0.2s; }
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        body { background: #070b14; color: white; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .active-tab { color: #3b82f6; transform: translateY(-5px); }
+        .view { display: none; animation: fadeIn 0.4s ease-out; }
+        .active-view { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        input, select { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; }
     </style>
 </head>
-<body class="pb-28">
+<body class="pb-32">
 
-    <header class="p-6 flex justify-between items-center">
+    <header class="p-6 flex justify-between items-center sticky top-0 z-40 bg-[#070b14]/80 backdrop-blur-md">
         <div>
-            <p class="text-gray-400 text-xs uppercase tracking-tighter">Control de Gastos</p>
-            <h1 class="text-2xl font-bold text-white tracking-tight">FamFinance <span class="text-blue-500">Bs</span></h1>
+            <h1 id="viewTitle" class="text-2xl font-extrabold tracking-tight">Inicio</h1>
+            <p class="text-[10px] text-blue-500 font-bold uppercase tracking-[3px]">FamFinance OS</p>
         </div>
-        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center font-black shadow-lg shadow-blue-500/20">B</div>
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center shadow-lg shadow-blue-900/20">
+            <i class="fas fa-bolt text-xs"></i>
+        </div>
     </header>
 
-    <div class="px-6 mb-8">
-        <div class="glass p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600/10 to-purple-600/10 text-center">
-            <p class="text-gray-400 text-xs mb-1 uppercase tracking-widest">Saldo en Bolivianos</p>
-            <h2 id="totalBalance" class="text-5xl font-black mb-6 tracking-tighter">Bs 0.00</h2>
-            <div class="flex gap-3">
-                <div class="bg-white/5 p-3 rounded-2xl flex-1 border border-white/5">
-                    <p class="text-[10px] text-green-400 uppercase font-bold">Ingresos</p>
+    <main id="homeView" class="view active-view px-6">
+        <div class="glass p-8 rounded-[2.5rem] bg-gradient-to-br from-blue-600/10 to-transparent mb-8">
+            <p class="text-gray-500 text-xs font-semibold mb-1 italic">Balance Actual</p>
+            <h2 id="totalBalance" class="text-5xl font-black tracking-tighter mb-6">Bs 0.00</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-3xl">
+                    <p class="text-[9px] text-emerald-400 font-black uppercase">Ingresos</p>
                     <p id="totalIncome" class="font-bold text-sm">Bs 0</p>
                 </div>
-                <div class="bg-white/5 p-3 rounded-2xl flex-1 border border-white/5">
-                    <p class="text-[10px] text-red-400 uppercase font-bold">Gastos</p>
+                <div class="bg-rose-500/10 border border-rose-500/20 p-4 rounded-3xl">
+                    <p class="text-[9px] text-rose-400 font-black uppercase">Gastos</p>
                     <p id="totalExpenses" class="font-bold text-sm">Bs 0</p>
                 </div>
             </div>
         </div>
-    </div>
+        <h3 class="text-sm font-bold text-gray-400 mb-4 uppercase tracking-widest">Actividad Reciente</h3>
+        <div id="transactionList" class="space-y-3"></div>
+    </main>
 
-    <div class="px-6 mb-8">
-        <div class="glass p-4 rounded-3xl h-48">
-            <canvas id="expenseChart"></canvas>
+    <section id="statsView" class="view px-6">
+        <div class="glass p-6 rounded-[2.5rem] mb-6">
+            <canvas id="expenseChart" height="280"></canvas>
         </div>
-    </div>
-
-    <div class="px-6">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-gray-200 text-sm">Historial de Movimientos</h3>
-            <button onclick="clearData()" class="text-[10px] text-red-400/50 uppercase tracking-widest">Limpiar todo</button>
-        </div>
-        <div id="transactionList" class="space-y-3">
+        <div id="categoryBreakdown" class="space-y-2">
             </div>
-    </div>
+    </section>
 
-    <div id="modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
+    <section id="goalsView" class="view px-6">
+        <div class="glass p-8 rounded-[2.5rem] text-center">
+            <div class="w-20 h-20 bg-blue-600/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-piggy-bank text-3xl text-blue-500"></i>
+            </div>
+            <h2 class="font-black text-xl mb-2">Meta de Ahorro</h2>
+            <p class="text-gray-500 text-sm mb-6">Tu ahorro actual representa el 20% de tus ingresos totales.</p>
+            <div class="w-full bg-white/5 h-4 rounded-full overflow-hidden mb-2">
+                <div id="goalBar" class="bg-blue-600 h-full transition-all duration-1000" style="width: 0%"></div>
+            </div>
+            <p id="goalText" class="text-xs font-bold text-blue-400">Bs 0 / Meta: Bs 5,000</p>
+        </div>
+    </section>
+
+    <section id="settingsView" class="view px-6 text-center">
+        <div class="space-y-4">
+            <button onclick="clearData()" class="w-full glass p-6 rounded-3xl border-rose-500/20 text-rose-500 font-bold flex items-center justify-between">
+                Limpiar Base de Datos <i class="fas fa-trash-alt"></i>
+            </button>
+            <div class="glass p-6 rounded-3xl text-left text-xs text-gray-500 leading-relaxed">
+                <p class="font-bold text-gray-300 mb-2 uppercase">Información</p>
+                FamFinance OS Versión Pro 2.0. Desarrollado para gestión familiar avanzada en Tarija, Bolivia.
+            </div>
+        </div>
+    </section>
+
+    <div id="modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
         <div class="glass w-full max-w-sm p-8 rounded-[3rem]">
-            <h2 id="modalTitle" class="text-xl font-black mb-6 text-center tracking-tight">Nuevo Registro</h2>
+            <h2 id="modalTitle" class="text-2xl font-black mb-8 text-center">Registrar</h2>
             <input type="hidden" id="editId">
-            <div class="space-y-4">
-                <input id="desc" type="text" placeholder="Descripción (ej. Almuerzo)" class="w-full bg-white/5 border border-white/10 p-4 rounded-2xl text-white outline-none focus:border-blue-500">
-                
+            <div class="space-y-5">
+                <input id="desc" type="text" placeholder="¿Qué fue?" class="w-full p-4 rounded-2xl text-white outline-none focus:ring-2 ring-blue-500/50">
                 <div class="flex gap-3">
-                    <div class="relative flex-1">
-                        <span class="absolute left-4 top-4 text-gray-500 text-sm">Bs</span>
-                        <input id="amount" type="number" placeholder="0.00" class="w-full bg-white/5 border border-white/10 p-4 pl-10 rounded-2xl text-white outline-none">
-                    </div>
-                    <select id="type" class="bg-slate-800 border border-white/10 px-4 rounded-2xl text-white outline-none text-xs">
+                    <input id="amount" type="number" placeholder="Monto" class="flex-1 p-4 rounded-2xl text-white outline-none">
+                    <select id="type" class="p-4 rounded-2xl text-white outline-none">
                         <option value="expense">Gasto</option>
                         <option value="income">Ingreso</option>
                     </select>
                 </div>
-
-                <select id="category" class="w-full bg-slate-800 border border-white/10 p-4 rounded-2xl text-white outline-none">
+                <select id="category" class="w-full p-4 rounded-2xl text-white outline-none">
                     <option value="Comida">🍔 Comida</option>
                     <option value="Hogar">🏠 Hogar</option>
                     <option value="Ocio">🎮 Ocio</option>
@@ -89,75 +104,92 @@
                     <option value="Transporte">🚗 Transporte</option>
                     <option value="Otros">✨ Otros</option>
                 </select>
-
-                <div class="flex gap-3 pt-4">
-                    <button onclick="closeModal()" class="flex-1 p-4 rounded-2xl bg-white/5 font-bold text-[10px] uppercase">Cancelar</button>
-                    <button onclick="saveTransaction()" id="saveBtn" class="flex-1 p-4 rounded-2xl bg-blue-600 font-bold text-[10px] uppercase shadow-lg shadow-blue-600/40">Guardar</button>
+                <div class="flex gap-4 pt-6">
+                    <button onclick="closeModal()" class="flex-1 p-4 rounded-2xl font-bold text-gray-500">SALIR</button>
+                    <button onclick="saveTransaction()" id="saveBtn" class="flex-1 p-4 rounded-2xl bg-blue-600 font-bold shadow-xl shadow-blue-600/30">OK</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <nav class="fixed bottom-8 left-8 right-8 glass h-16 rounded-full flex items-center justify-around px-2 shadow-2xl border-t border-white/10">
-        <button class="text-blue-500"><i class="fas fa-house text-xl"></i></button>
-        <button class="text-gray-500"><i class="fas fa-chart-line text-xl"></i></button>
-        <button onclick="openAddModal()" class="bg-blue-600 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl -mt-14 border-[6px] border-[#0f172a] active:scale-90 transition">
-            <i class="fas fa-plus text-xl"></i>
+    <nav class="fixed bottom-8 left-8 right-8 glass h-20 rounded-[2.5rem] flex items-center justify-around px-2 z-50 shadow-2xl">
+        <button onclick="switchView('home', this)" class="nav-btn active-tab transition-all duration-300 px-4 py-2 rounded-2xl">
+            <i class="fas fa-house-chimney text-xl"></i>
         </button>
-        <button class="text-gray-500"><i class="fas fa-piggy-bank text-xl"></i></button>
-        <button class="text-gray-500"><i class="fas fa-user-gear text-xl"></i></button>
+        <button onclick="switchView('stats', this)" class="nav-btn text-gray-500 transition-all duration-300 px-4 py-2 rounded-2xl">
+            <i class="fas fa-chart-line text-xl"></i>
+        </button>
+        
+        <button onclick="openAddModal()" class="bg-blue-600 w-16 h-16 rounded-full flex items-center justify-center -mt-16 border-[8px] border-[#070b14] shadow-2xl active:scale-90 transition shadow-blue-600/40">
+            <i class="fas fa-plus text-white text-xl"></i>
+        </button>
+
+        <button onclick="switchView('goals', this)" class="nav-btn text-gray-500 transition-all duration-300 px-4 py-2 rounded-2xl">
+            <i class="fas fa-piggy-bank text-xl"></i>
+        </button>
+        <button onclick="switchView('settings', this)" class="nav-btn text-gray-500 transition-all duration-300 px-4 py-2 rounded-2xl">
+            <i class="fas fa-sliders text-xl"></i>
+        </button>
     </nav>
 
     <script>
         let transactions = JSON.parse(localStorage.getItem('famFinanceData')) || [];
         let myChart = null;
 
-        function formatBs(val) {
-            return "Bs " + val.toLocaleString('es-BO', {minimumFractionDigits: 2});
+        // --- SISTEMA DE NAVEGACIÓN ---
+        function switchView(viewName, btn) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active-view'));
+            document.getElementById(viewName + 'View').classList.add('active-view');
+            
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+            btn.classList.add('active-tab');
+
+            const titles = { home: 'Inicio', stats: 'Análisis', goals: 'Mis Metas', settings: 'Ajustes' };
+            document.getElementById('viewTitle').innerText = titles[viewName];
+
+            if(viewName === 'stats') setTimeout(updateUI, 100);
         }
 
+        // --- LÓGICA DE DATOS ---
         function openAddModal() {
             document.getElementById('modalTitle').innerText = "Nuevo Registro";
             document.getElementById('editId').value = "";
             document.getElementById('desc').value = "";
             document.getElementById('amount').value = "";
-            document.getElementById('saveBtn').innerText = "GUARDAR";
             document.getElementById('modal').classList.remove('modal-hidden');
         }
 
-        // --- FUNCIÓN PARA EDITAR ---
         function openEditModal(id) {
-            const t = transactions.find(item => item.id === id);
-            if (!t) return;
-
-            document.getElementById('modalTitle').innerText = "Editar Registro";
+            const t = transactions.find(x => x.id === id);
+            document.getElementById('modalTitle').innerText = "Editar";
             document.getElementById('editId').value = t.id;
             document.getElementById('desc').value = t.desc;
             document.getElementById('amount').value = t.amount;
             document.getElementById('type').value = t.type;
             document.getElementById('category').value = t.category;
-            document.getElementById('saveBtn').innerText = "ACTUALIZAR";
             document.getElementById('modal').classList.remove('modal-hidden');
         }
 
         function closeModal() { document.getElementById('modal').classList.add('modal-hidden'); }
 
         function saveTransaction() {
-            const editId = document.getElementById('editId').value;
-            const desc = document.getElementById('desc').value;
-            const amount = parseFloat(document.getElementById('amount').value);
-            const type = document.getElementById('type').value;
-            const category = document.getElementById('category').value;
+            const id = document.getElementById('editId').value;
+            const data = {
+                id: id ? parseInt(id) : Date.now(),
+                desc: document.getElementById('desc').value,
+                amount: parseFloat(document.getElementById('amount').value),
+                type: document.getElementById('type').value,
+                category: document.getElementById('category').value,
+                date: new Date().toLocaleDateString()
+            };
 
-            if (!desc || isNaN(amount)) return alert("Completa los datos correctamente.");
+            if(!data.desc || !data.amount) return;
 
-            if (editId) {
-                // Actualizar existente
-                const index = transactions.findIndex(t => t.id == editId);
-                transactions[index] = { ...transactions[index], desc, amount, type, category };
+            if(id) {
+                const idx = transactions.findIndex(t => t.id === data.id);
+                transactions[idx] = data;
             } else {
-                // Nuevo registro
-                transactions.push({ id: Date.now(), desc, amount, type, category, date: new Date().toLocaleDateString() });
+                transactions.push(data);
             }
 
             localStorage.setItem('famFinanceData', JSON.stringify(transactions));
@@ -165,21 +197,11 @@
             updateUI();
         }
 
-        function deleteTransaction(e, id) {
-            e.stopPropagation(); // Evita que se abra el modal de editar al borrar
-            if(confirm("¿Eliminar este movimiento?")) {
-                transactions = transactions.filter(t => t.id !== id);
-                localStorage.setItem('famFinanceData', JSON.stringify(transactions));
-                updateUI();
-            }
-        }
-
-        function clearData() {
-            if(confirm("¿Reiniciar toda la contabilidad?")) {
-                transactions = [];
-                localStorage.removeItem('famFinanceData');
-                updateUI();
-            }
+        function deleteT(e, id) {
+            e.stopPropagation();
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('famFinanceData', JSON.stringify(transactions));
+            updateUI();
         }
 
         function updateUI() {
@@ -188,62 +210,78 @@
             let inc = 0, exp = 0, cats = {};
 
             transactions.slice().reverse().forEach(t => {
-                if (t.type === 'income') inc += t.amount;
-                else { exp += t.amount; cats[t.category] = (cats[t.category] || 0) + t.amount; }
+                if(t.type === 'income') inc += t.amount;
+                else { 
+                    exp += t.amount; 
+                    cats[t.category] = (cats[t.category] || 0) + t.amount;
+                }
 
-                const item = document.createElement('div');
-                item.className = 'glass p-4 rounded-2xl flex items-center justify-between active:bg-white/10 transition cursor-pointer';
-                item.onclick = () => openEditModal(t.id); // Click para editar
-                
-                item.innerHTML = `
+                const div = document.createElement('div');
+                div.className = 'glass p-5 rounded-[2rem] flex items-center justify-between active:scale-95 transition';
+                div.onclick = () => openEditModal(t.id);
+                div.innerHTML = `
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-xl ${t.type === 'income' ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'} flex items-center justify-center border border-white/5">
-                            <i class="fas ${t.type === 'income' ? 'fa-arrow-up' : 'fa-cart-shopping'} text-xs"></i>
+                        <div class="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-lg shadow-inner">
+                            ${t.type === 'income' ? '💰' : '💸'}
                         </div>
                         <div>
-                            <p class="text-sm font-bold tracking-tight">${t.desc}</p>
-                            <p class="text-[10px] text-gray-500 uppercase font-medium">${t.category} • ${t.date}</p>
+                            <p class="font-bold text-sm">${t.desc}</p>
+                            <p class="text-[10px] text-gray-500 uppercase font-black tracking-widest">${t.category}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-4">
-                        <p class="font-black text-sm ${t.type === 'income' ? 'text-green-400' : 'text-red-400'}">
-                            ${t.type === 'income' ? '+' : '-'}${formatBs(t.amount)}
-                        </p>
-                        <button onclick="deleteTransaction(event, ${t.id})" class="text-gray-700 hover:text-red-500 p-2"><i class="fas fa-trash-can text-xs"></i></button>
-                    </div>`;
-                list.appendChild(item);
+                        <p class="font-black ${t.type === 'income' ? 'text-emerald-400' : 'text-rose-400'}">Bs ${t.amount.toFixed(2)}</p>
+                        <button onclick="deleteT(event, ${t.id})" class="text-gray-800"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+                list.appendChild(div);
             });
 
-            document.getElementById('totalBalance').innerText = formatBs(inc - exp);
-            document.getElementById('totalIncome').innerText = formatBs(inc);
-            document.getElementById('totalExpenses').innerText = formatBs(exp);
+            document.getElementById('totalBalance').innerText = `Bs ${(inc - exp).toFixed(2)}`;
+            document.getElementById('totalIncome').innerText = `Bs ${inc.toFixed(0)}`;
+            document.getElementById('totalExpenses').innerText = `Bs ${exp.toFixed(0)}`;
+
+            // Actualizar Metas
+            const meta = 5000;
+            const progress = Math.min(((inc - exp) / meta) * 100, 100);
+            document.getElementById('goalBar').style.width = Math.max(progress, 0) + '%';
+            document.getElementById('goalText').innerText = `Bs ${(inc - exp).toFixed(0)} / Meta: Bs ${meta}`;
 
             updateChart(cats);
         }
 
-        function updateChart(data) {
+        function updateChart(cats) {
             const ctx = document.getElementById('expenseChart');
-            if (myChart) myChart.destroy();
+            if(!ctx) return;
+            if(myChart) myChart.destroy();
             myChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(data),
+                    labels: Object.keys(cats),
                     datasets: [{
-                        data: Object.values(data),
-                        backgroundColor: ['#3b82f6', '#f97316', '#a855f7', '#ef4444', '#10b981', '#facc15'],
+                        data: Object.values(cats),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#64748b'],
                         borderWidth: 0,
                         hoverOffset: 20
                     }]
                 },
                 options: {
-                    plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 9, weight: '600' }, boxWidth: 10 } } },
+                    plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10, weight: 'bold' }, padding: 20 } } },
                     maintainAspectRatio: false,
-                    cutout: '75%'
+                    cutout: '80%'
                 }
             });
         }
 
-        window.onload = updateUI;
+        function clearData() {
+            if(confirm("¿Borrar todo?")) {
+                transactions = [];
+                localStorage.clear();
+                updateUI();
+            }
+        }
+
+        updateUI();
     </script>
 </body>
 </html>
