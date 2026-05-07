@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamFinance OS - Live Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+        body { background: #0f172a; color: white; font-family: 'Inter', sans-serif; }
+        .glass { 
+            background: rgba(255, 255, 255, 0.05); 
+            backdrop-filter: blur(12px); 
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+        }
+        .modal-hidden { display: none; }
+        .nav-item:active { transform: scale(0.9); transition: 0.2s; }
+    </style>
+</head>
+<body class="pb-24">
+
+    <!-- Header -->
+    <header class="p-6 flex justify-between items-center">
+        <div>
+            <p class="text-gray-400 text-sm">Bienvenido, Familia 👋</p>
+            <h1 class="text-2xl font-bold text-white">FamFinance <span class="text-blue-500">OS</span></h1>
+        </div>
+        <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 flex items-center justify-center font-bold shadow-lg cursor-pointer">
+            F
+        </div>
+    </header>
+
+    <!-- Balance Card -->
+    <div class="px-6 mb-8">
+        <div class="glass p-6 rounded-3xl shadow-2xl bg-gradient-to-br from-blue-600/20 to-purple-600/20">
+            <p class="text-gray-300 text-sm mb-1">Balance Total Familiar</p>
+            <h2 id="totalBalance" class="text-4xl font-black mb-4">$0.00</h2>
+            <div class="flex justify-between gap-4">
+                <div class="bg-green-500/20 p-3 rounded-2xl flex-1">
+                    <p class="text-xs text-green-400">Ingresos</p>
+                    <p id="totalIncome" class="font-bold">+$0</p>
+                </div>
+                <div class="bg-red-500/20 p-3 rounded-2xl flex-1">
+                    <p class="text-xs text-red-400">Gastos</p>
+                    <p id="totalExpenses" class="font-bold">-$0</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Chart -->
+    <div class="px-6 mb-8">
+        <h3 class="text-lg font-semibold mb-4 text-gray-200">Distribución de Gastos</h3>
+        <div class="glass p-4 rounded-3xl">
+            <canvas id="expenseChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="px-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-200">Movimientos</h3>
+            <button onclick="clearData()" class="text-xs text-red-400 underline">Borrar todo</button>
+        </div>
+        <div id="transactionList" class="space-y-4">
+            <!-- Las transacciones se cargan aquí dinámicamente -->
+        </div>
+    </div>
+
+    <!-- MODAL PARA AGREGAR GASTO -->
+    <div id="modal" class="modal-hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/60 backdrop-blur-sm">
+        <div class="glass w-full max-w-md p-6 rounded-3xl shadow-2xl">
+            <h2 class="text-xl font-bold mb-4">Nuevo Movimiento</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Descripción</label>
+                    <input id="desc" type="text" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-blue-500">
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-400 block mb-1">Monto</label>
+                        <input id="amount" type="number" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-blue-500">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-xs text-gray-400 block mb-1">Tipo</label>
+                        <select id="type" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-blue-500">
+                            <option value="expense">Gasto</option>
+                            <option value="income">Ingreso</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-gray-400 block mb-1">Categoría</label>
+                    <select id="category" class="w-full bg-slate-800 border border-slate-700 p-3 rounded-xl text-white outline-none focus:border-blue-500">
+                        <option value="Comida">🍔 Comida</option>
+                        <option value="Hogar">🏠 Hogar</option>
+                        <option value="Ocio">🎮 Ocio</option>
+                        <option value="Salud">💊 Salud</option>
+                        <option value="Transporte">🚗 Transporte</option>
+                        <option value="Otros">✨ Otros</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="closeModal()" class="flex-1 p-3 rounded-xl bg-slate-700 font-semibold">Cancelar</button>
+                    <button onclick="saveTransaction()" class="flex-1 p-3 rounded-xl bg-blue-600 font-semibold shadow-lg shadow-blue-500/40">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-6 left-6 right-6 glass h-16 rounded-full flex items-center justify-around px-4 shadow-2xl border border-white/20">
+        <a href="#" class="nav-item text-blue-400 text-xl"><i class="fas fa-home"></i></a>
+        <a href="#" class="nav-item text-gray-400 text-xl"><i class="fas fa-chart-pie"></i></a>
+        <button onclick="openModal()" class="nav-item bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center text-xl -mt-10 shadow-lg shadow-blue-500/50">
+            <i class="fas fa-plus"></i>
+        </button>
+        <a href="#" class="nav-item text-gray-400 text-xl"><i class="fas fa-users"></i></a>
+        <a href="#" class="nav-item text-gray-400 text-xl"><i class="fas fa-cog"></i></a>
+    </nav>
+
+    <script>
+        // --- LÓGICA DE LA APLICACIÓN ---
+        let transactions = JSON.parse(localStorage.getItem('famFinanceData')) || [];
+        let myChart;
+
+        function openModal() { document.getElementById('modal').classList.remove('modal-hidden'); }
+        function closeModal() { document.getElementById('modal').classList.add('modal-hidden'); }
+
+        function saveTransaction() {
+            const desc = document.getElementById('desc').value;
+            const amount = parseFloat(document.getElementById('amount').value);
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+
+            if (!desc || !amount) return alert("Por favor llena los campos");
+
+            const transaction = {
+                id: Date.now(),
+                desc,
+                amount,
+                type,
+                category,
+                date: new Date().toLocaleDateString()
+            };
+
+            transactions.push(transaction);
+            localStorage.setItem('famFinanceData', JSON.stringify(transactions));
+            
+            closeModal();
+            updateUI();
+            
+            // Limpiar inputs
+            document.getElementById('desc').value = '';
+            document.getElementById('amount').value = '';
+        }
+
+        function deleteTransaction(id) {
+            transactions = transactions.filter(t => t.id !== id);
+            localStorage.setItem('famFinanceData', JSON.stringify(transactions));
+            updateUI();
+        }
+
+        function clearData() {
+            if(confirm("¿Borrar todos los datos?")) {
+                transactions = [];
+                localStorage.removeItem('famFinanceData');
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            const list = document.getElementById('transactionList');
+            const totalBalanceEl = document.getElementById('totalBalance');
+            const totalIncomeEl = document.getElementById('totalIncome');
+            const totalExpensesEl = document.getElementById('totalExpenses');
+            
+            list.innerHTML = '';
+            let income = 0;
+            let expenses = 0;
+            let categoryData = {};
+
+            transactions.forEach(t => {
+                if (t.type === 'income') income += t.amount;
+                else {
+                    expenses += t.amount;
+                    categoryData[t.category] = (categoryData[t.category] || 0) + t.amount;
+                }
+
+                const item = document.createElement('div');
+                item.className = 'glass p-4 rounded-2xl flex items-center justify-between animate-fade-in';
+                item.innerHTML = `
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full ${t.type === 'income' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'} flex items-center justify-center">
+                            <i class="fas ${t.type === 'income' ? 'fa-arrow-up' : 'fa-shopping-cart'}"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${t.desc}</p>
+                            <p class="text-xs text-gray-400">${t.date} • ${t.category}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <p class="font-bold ${t.type === 'income' ? 'text-green-400' : 'text-red-400'}">
+                            ${t.type === 'income' ? '+' : '-'}$${t.amount.toFixed(2)}
+                        </p>
+                        <button onclick="deleteTransaction(${t.id})" class="text-gray-500 hover:text-red-500"><i class="fas fa-trash-alt text-xs"></i></button>
+                    </div>
+                `;
+                list.prepend(item);
+            });
+
+            totalBalanceEl.innerText = `$${(income - expenses).toFixed(2)}`;
+            totalIncomeEl.innerText = `+$${income.toFixed(2)}`;
+            totalExpensesEl.innerText = `-$${expenses.toFixed(2)}`;
+
+            updateChart(categoryData);
+        }
+
+        function updateChart(categoryData) {
+            const ctx = document.getElementById('expenseChart').getContext('2d');
+            const labels = Object.keys(categoryData);
+            const data = Object.values(categoryData);
+
+            if (myChart) myChart.destroy();
+
+            myChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#f97316', '#3b82f6', '#a855f7', '#ef4444', '#10b981', '#facc15'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: 'white', padding: 20, font: { family: 'Inter' } } } 
+                    },
+                    maintainAspectRatio: false
+                }
+            });
+        }
+
+        // Carga inicial
+        updateUI();
+    </script>
+</body>
+</html>
